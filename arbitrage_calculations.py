@@ -100,3 +100,15 @@ def get_price_for_t_pair(t_pair, prices_json):
         "pair_c_ask": pair_c_ask,
         "pair_c_bid": pair_c_bid
     }
+
+
+# Getting the Surface Rate
+
+
+
+
+
+
+# Getting the Depth from the Order Book
+def get_depth_from_orderbook():
+    print("hi")

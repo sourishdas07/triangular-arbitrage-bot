@@ -1,50 +1,64 @@
 import arbitrage_calculations
+import arbitrage_functions
 import json
 import requests
 import time
 
 """
-    Step 0: Finding Tradeable Coins
+    Step 1: Finding Tradeable Coins
 """
 
-# Getting the Valid Coins
-currency_data_url = "https://api.poloniex.com/v2/currencies"
-currency_data_req = requests.get(currency_data_url)
-currency_data_json = json.loads(currency_data_req.text)
 
-filtered_data = [item for item in currency_data_json if item["tradeEnable"]]
-symbol_list = [item["coin"] for item in filtered_data]
+def step_1():
+    # Getting the Different Coin Exchange Possibilities
+    coin_list = arbitrage_functions.possible_coins_for_arbitrage()
 
-print(len(symbol_list))
-
-# Getting the Different Coin Exchange Possibilities
-market_price_url = "https://api.poloniex.com/markets/price"
-market_price_req = requests.get(market_price_url)
-market_price_json = json.loads(market_price_req.text)
-
-coin_list = [item["symbol"] for item in market_price_json]
-
-print(len(coin_list))
+    return coin_list
 
 
 """
-    Step 1: Structuring Triangular Arbitrage Pairs
+    Step 2: Structuring Triangular Arbitrage Pairs
 """
 
-structured_list = arbitrage_calculations.structure_triangular_pairs(coin_list)
 
-# Saving Structured List
-with open("structured_triangular_pairs.json", "w") as fp:
-    json.dump(structured_list, fp)
+def step_2(coin_list):
+    # Structure the list of tradeable triangular arbitrage pairs
+    structured_list = arbitrage_calculations.structure_triangular_pairs(coin_list)
 
+    # Save structured list
+    with open("structured_triangular_pairs.json", "w") as fp:
+        json.dump(structured_list, fp)
 
 
 """
-    Step 2: Calculating Surface Arbitrage Opportunities
+    Step 3: Calculating Surface Arbitrage Opportunities
 """
 
-# Get Structured Pairs
-with open("structured_triangular_pairs.json") as json_file:
-    structured_pairs = json.load(json_file)
 
-print(structured_pairs)
+def step_3():
+    # Get Structured Pairs
+    with open("structured_triangular_pairs.json") as json_file:
+        structured_pairs = json.load(json_file)
+
+    # print(structured_pairs)
+
+    prices_json = arbitrage_functions.get_coin_tickers("https://api.poloniex.com/markets/ticker24h")
+
+    for t_pair in structured_pairs:
+        prices_dict = arbitrage_calculations.get_price_for_t_pair(t_pair, prices_json)
+        surface_arb = arbitrage_calculations.calc_triangular_arb_surface_rate(t_pair, prices_dict)
+
+
+""" MAIN """
+if __name__ == "__main__":
+    # print("Retrieving list of cryptos...")
+    # coin_list = step_1()
+    #
+    # print("Structuring cryptos into triangular pairs (2 mins)...")
+    # structured_pairs = step_2(coin_list)
+    #
+    # print("Running scanning algorithm (will run until killed)...")
+    # while True:
+    #     time.sleep(1)
+    #     step_3()
+    arbitrage_calculations.get_depth_from_orderbook()
